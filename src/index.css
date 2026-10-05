@@ -1,4 +1,4 @@
-/* Global reset — clean slate for Sítio Iluminado */
+/* Reset global */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,17 +7,36 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  margin: 0;
-  padding: 0;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
-  /* Remove the Vite default centered layout — pages control their own layout */
-  width: 100%;
-  min-height: 100vh;
+img, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+#root { width: 100%; min-height: 100vh; }
+
+/* Botão flutuante do WhatsApp */
+.wa-fab {
+  position: fixed; right: 24px; bottom: 24px; z-index: 90;
+  width: 58px; height: 58px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #25d366;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
+  transition: transform 0.3s cubic-bezier(0.6, 0, 0.2, 1), box-shadow 0.3s;
+}
+.wa-fab:hover { transform: scale(1.1) translateY(-3px); box-shadow: 0 8px 30px rgba(37, 211, 102, 0.6); }
+.wa-fab:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@media (max-width: 768px) {
+  .wa-fab { right: 16px; bottom: 16px; width: 54px; height: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
