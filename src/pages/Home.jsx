@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
+import { useNavigate } from 'react-router-dom'
 import {
   Bath, BedDouble, Beef, Car, Church, Clock, Droplets, Flame, Goal, MapPin, PartyPopper,
   Pizza, Play, Route, ShoppingBag, Sparkles, Tv, Users, Volleyball, Waves, Wifi, CircleDot,
@@ -98,6 +99,7 @@ const IDEAL_PARA = [
 
 export default function Home() {
   const containerRef = useRef(null)
+  const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -258,7 +260,8 @@ export default function Home() {
 
       <header className={`nav${scrolled ? ' is-scrolled' : ''}`} id="nav">
         <a href="#topo" className="logo" aria-label="Sítio Iluminado — início">
-          <span className="logo-dot" aria-hidden="true"></span>
+          {/* Atalho discreto para o painel: duplo clique no solzinho. */}
+          <span className="logo-dot" aria-hidden="true" onDoubleClick={() => navigate('/admin')}></span>
           SÍTIO ILUMINADO
         </a>
         <nav aria-label="Seções">

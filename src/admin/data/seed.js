@@ -1,6 +1,6 @@
 import { addDias, diaSemana, hoje } from '../lib/format'
 
-export const VERSAO = 1
+export const VERSAO = 2
 
 export const TEMPLATES_PADRAO = [
   {
@@ -54,7 +54,7 @@ export const CONFIG_PADRAO = {
 }
 
 // Portfólio do hospedatemporada.com.br.
-const IMOVEIS = [
+export const IMOVEIS = [
   {
     id: 'sitio-iluminado', nome: 'Sítio Iluminado', cidade: 'Biritiba Mirim / Mogi das Cruzes - SP',
     quartos: 4, banheiros: 4, capacidade: 30, diaria: 0, usaTabela: true, proprio: true,
@@ -75,6 +75,18 @@ const IMOVEIS = [
     quartos: 6, banheiros: 0, capacidade: 40, diaria: 2200, usaTabela: false, proprio: false,
     comissaoPct: 20, proprietario: '', foto: '', cor: '#7c3aed', ativo: true,
   },
+  // Locais com tabela de preços própria (src/data/locais.js), adicionados na versão 2.
+  ...[
+    ['mairinque', 'Mairinque', 'Mairinque - SP', 40, '#ea580c'],
+    ['pedacinho', 'Pedacinho', '', 25, '#0d9488'],
+    ['pinheiro-atibaia', 'Pinheiro Atibaia', 'Atibaia - SP', 20, '#15803d'],
+    ['rancho', 'Rancho', '', 25, '#b45309'],
+    ['sao-roque-lourdes', 'São Roque - Lourdes', 'São Roque - SP', 25, '#2563eb'],
+    ['sao-roque-rosi', 'São Roque - Rosi', 'São Roque - SP', 20, '#db2777'],
+  ].map(([id, nome, cidade, capacidade, cor]) => ({
+    id, nome, cidade, quartos: 0, banheiros: 0, capacidade, diaria: 0, usaTabela: true, proprio: false,
+    comissaoPct: 20, proprietario: '', foto: '', cor, ativo: true,
+  })),
 ]
 
 const CLIENTES = [

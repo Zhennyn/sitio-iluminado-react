@@ -4,7 +4,7 @@
 // então ligar um banco de dados depois significa trocar só este arquivo.
 
 import { useSyncExternalStore } from 'react'
-import { CONFIG_PADRAO, VERSAO, criarSeed } from './seed'
+import { CONFIG_PADRAO, IMOVEIS, VERSAO, criarSeed } from './seed'
 
 const CHAVE = 'hospeda-temporada:admin'
 export const COLECOES = ['imoveis', 'clientes', 'reservas', 'bloqueios', 'despesas', 'repasses']
@@ -13,6 +13,12 @@ function normalizar(dados) {
   const base = criarSeed({ vazio: true })
   const out = { ...base, versao: VERSAO, config: { ...CONFIG_PADRAO, ...dados.config } }
   for (const col of COLECOES) out[col] = Array.isArray(dados[col]) ? dados[col] : base[col]
+  // Versão 2: inclui os locais novos do portfólio em dados salvos antes deles existirem.
+  if ((dados.versao || 1) < 2) {
+    const ids = new Set(out.imoveis.map((i) => i.id))
+    const novos = IMOVEIS.filter((i) => !ids.has(i.id)).map((i) => ({ ...i, criadoEm: new Date().toISOString() }))
+    out.imoveis = [...out.imoveis, ...novos]
+  }
   if (!Array.isArray(out.config.templates) || !out.config.templates.length) {
     out.config.templates = CONFIG_PADRAO.templates
   }

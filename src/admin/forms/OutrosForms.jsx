@@ -91,7 +91,7 @@ export function ImovelForm({ imovel }) {
         </Campo>
         <label className="check">
           <input type="checkbox" checked={f.usaTabela} onChange={set('usaTabela')} />
-          <span>Usar a tabela de pacotes do site (Sítio Iluminado)</span>
+          <span>Usar a tabela de pacotes do site (para locais que têm tabela)</span>
         </label>
         <label className="check">
           <input type="checkbox" checked={f.proprio} onChange={set('proprio')} />

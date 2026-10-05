@@ -59,7 +59,23 @@ export function conflitosDe(estado, { imovelId, checkin, checkout, ignorarId }) 
   return [...reservas.map((r) => ({ tipo: 'reserva', item: r })), ...bloqueios.map((b) => ({ tipo: 'bloqueio', item: b }))]
 }
 
-export const indexar = (lista) => Object.fromEntries(lista.map((i) => [i.id, i]))
+// Dias ocupados de um imóvel (reservas ativas e bloqueios), para o calendário do site.
+// Ignora os dados de exemplo do painel, que não são reservas de verdade.
+export function diasOcupados(estado, imovelId) {
+  const dias = new Set()
+  const marcar = (ini, fim) => {
+    for (let d = ini; d <= fim; d = addDias(d, 1)) dias.add(d)
+  }
+  for (const r of estado.reservas) {
+    if (r.imovelId === imovelId && ativa(r) && !r.demo) marcar(r.checkin, r.checkout)
+  }
+  for (const b of estado.bloqueios) {
+    if (b.imovelId === imovelId && !b.demo) marcar(b.inicio, b.fim)
+  }
+  return dias
+}
+
+export const indexar =(lista) => Object.fromEntries(lista.map((i) => [i.id, i]))
 
 // Comissão da administradora sobre uma reserva. Em imóvel próprio, todo o valor fica com ela.
 export function comissaoDe(r, imovel) {

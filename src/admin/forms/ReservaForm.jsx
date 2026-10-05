@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Calculator, AlertTriangle } from 'lucide-react'
 import { db, useDb } from '../data/store'
 import { conflitosDe, indexar, totalDe } from '../data/selectors'
-import { PACOTES, PERIODOS, calcularOrcamento } from '../../data/site'
+import { LOCAIS, PERIODOS, calcularOrcamento } from '../../data/locais'
 import { addDias, brl, diffDias, fmtData, hoje } from '../lib/format'
 import { useAdminUI } from '../ui/context'
 import { Campo, Modal } from '../ui/components'
@@ -44,6 +44,9 @@ export default function ReservaForm({ reserva, inicial = {} }) {
   const set = (campo) => (e) => setF((x) => ({ ...x, [campo]: e.target.value }))
 
   const imovel = indexar(estado.imoveis)[f.imovelId]
+  // Tabela de preços do site para este imóvel, se ele tiver uma.
+  const tabela = imovel?.usaTabela ? LOCAIS[imovel.id] : null
+  const pacoteId = tabela && !tabela.pacotes[f.pacote] ? 'hospedagem' : f.pacote
   const n = (v) => Number(String(v).replace(',', '.')) || 0
   const total = totalDe({ valor: n(f.valor), taxaLimpeza: n(f.taxaLimpeza), extras: n(f.extras) })
   const noites = f.checkin && f.checkout ? diffDias(f.checkin, f.checkout) : 0
@@ -52,13 +55,13 @@ export default function ReservaForm({ reserva, inicial = {} }) {
 
   const sugerir = () => {
     if (!imovel) return
-    if (imovel.usaTabela) {
-      const r = calcularOrcamento(f.pacote, f.periodo, Math.max(1, n(f.hospedes)), n(f.convidados))
+    if (tabela) {
+      const r = calcularOrcamento(imovel.id, pacoteId, f.periodo, Math.max(1, n(f.hospedes)), n(f.convidados))
       if (r.sobConsulta) {
         aviso(`Acima de ${r.maxPessoas} pessoas este pacote é sob consulta. Informe o valor manualmente.`, 'erro')
         return
       }
-      setF((x) => ({ ...x, valor: String(r.valBase), extras: String(r.valConvidados), taxaLimpeza: String(config.taxaLimpeza) }))
+      setF((x) => ({ ...x, pacote: pacoteId, valor: String(r.valBase + r.valSexta), extras: String(r.valConvidados), taxaLimpeza: String(r.limpeza) }))
     } else if (imovel.diaria) {
       setF((x) => ({ ...x, valor: String(imovel.diaria * Math.max(1, noites)), taxaLimpeza: String(config.taxaLimpeza) }))
     } else {
@@ -92,7 +95,7 @@ export default function ReservaForm({ reserva, inicial = {} }) {
       imovelId: f.imovelId,
       clienteId,
       titulo: f.titulo.trim(),
-      pacote: imovel?.usaTabela ? f.pacote : '',
+      pacote: tabela ? pacoteId : '',
       checkin: f.checkin,
       horaCheckin: f.horaCheckin,
       checkout: f.checkout,
@@ -200,14 +203,14 @@ export default function ReservaForm({ reserva, inicial = {} }) {
 
         <fieldset className="campo-largo valores">
           <legend>Valores</legend>
-          {imovel?.usaTabela && (
+          {tabela && (
             <div className="form-grade">
               <Campo label="Pacote da tabela">
-                <select value={f.pacote} onChange={set('pacote')}>
-                  {Object.entries(PACOTES).map(([id, p]) => <option key={id} value={id}>{p.nome}</option>)}
+                <select value={pacoteId} onChange={set('pacote')}>
+                  {Object.entries(tabela.pacotes).map(([id, p]) => <option key={id} value={id}>{p.nome}</option>)}
                 </select>
               </Campo>
-              {PACOTES[f.pacote]?.periodos ? (
+              {tabela.pacotes[pacoteId]?.periodos ? (
                 <Campo label="Período">
                   <select value={f.periodo} onChange={set('periodo')}>
                     {Object.entries(PERIODOS).map(([id, t]) => <option key={id} value={id}>{t}</option>)}
