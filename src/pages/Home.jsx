@@ -8,6 +8,8 @@ import {
   Pizza, Play, Route, ShoppingBag, Sparkles, Tv, Users, Volleyball, Waves, Wifi, CircleDot,
 } from 'lucide-react'
 import Calculadora from '../components/Calculadora'
+import Imoveis from '../components/Imoveis'
+import Regras from '../components/Regras'
 import { WhatsAppIcon, InstagramIcon } from '../components/BrandIcons'
 import {
   INSTAGRAM_HANDLE, INSTAGRAM_URL, PROPRIETARIO, VIDEO_URL, WHATSAPP_DISPLAY,
@@ -100,6 +102,8 @@ const IDEAL_PARA = [
 export default function Home() {
   const containerRef = useRef(null)
   const navigate = useNavigate()
+  // Escolha feita nos cards de imóveis; `n` remonta a calculadora com o local e as datas.
+  const [simulacao, setSimulacao] = useState({ n: 0 })
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -254,6 +258,11 @@ export default function Home() {
     )
   }, { scope: containerRef })
 
+  const simular = (localId, checkin, checkout) => {
+    setSimulacao((x) => ({ n: x.n + 1, localId, checkin, checkout }))
+    document.getElementById('orcamento')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <div ref={containerRef}>
       <div className="grain" aria-hidden="true"></div>
@@ -268,6 +277,7 @@ export default function Home() {
           <ul className="nav-links">
             <li><a href="#estrutura">Estrutura</a></li>
             <li><a href="#destaques">Destaques</a></li>
+            <li><a href="#imoveis">Imóveis</a></li>
             <li><a href="#orcamento">Orçamento</a></li>
             <li><a href="#contato">Contato</a></li>
           </ul>
@@ -391,9 +401,19 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ============ IMÓVEIS ============ */}
+        <section className="imoveis-section" id="imoveis" aria-labelledby="imoveis-title">
+          <Imoveis onSimular={simular} />
+        </section>
+
         {/* ============ ORÇAMENTO ============ */}
         <section className="calc-section" id="orcamento">
-          <Calculadora />
+          <Calculadora key={simulacao.n} inicial={simulacao} />
+        </section>
+
+        {/* ============ REGRAS ============ */}
+        <section className="regras-section" id="regras" aria-labelledby="regras-title">
+          <Regras />
         </section>
 
         {/* ============ CONTATO ============ */}

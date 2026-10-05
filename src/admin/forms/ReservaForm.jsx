@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Calculator, AlertTriangle } from 'lucide-react'
 import { db, useDb } from '../data/store'
 import { conflitosDe, indexar, totalDe } from '../data/selectors'
-import { LOCAIS, PERIODOS, calcularOrcamento } from '../../data/locais'
+import { LOCAIS, PERIODOS, calcularOrcamento, temTabela } from '../../data/locais'
 import { addDias, brl, diffDias, fmtData, hoje } from '../lib/format'
 import { useAdminUI } from '../ui/context'
 import { Campo, Modal } from '../ui/components'
@@ -45,7 +45,7 @@ export default function ReservaForm({ reserva, inicial = {} }) {
 
   const imovel = indexar(estado.imoveis)[f.imovelId]
   // Tabela de preços do site para este imóvel, se ele tiver uma.
-  const tabela = imovel?.usaTabela ? LOCAIS[imovel.id] : null
+  const tabela = imovel?.usaTabela && LOCAIS[imovel.id] && temTabela(LOCAIS[imovel.id]) ? LOCAIS[imovel.id] : null
   const pacoteId = tabela && !tabela.pacotes[f.pacote] ? 'hospedagem' : f.pacote
   const n = (v) => Number(String(v).replace(',', '.')) || 0
   const total = totalDe({ valor: n(f.valor), taxaLimpeza: n(f.taxaLimpeza), extras: n(f.extras) })

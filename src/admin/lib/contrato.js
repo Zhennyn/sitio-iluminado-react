@@ -1,5 +1,6 @@
 import { financeiroDe } from '../data/selectors'
 import { brl, fmtData, fmtHora, MESES } from './format'
+import { CANCELAMENTO, REGRAS_CASA } from '../../data/regras'
 
 const esc = (v) =>
   String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
@@ -87,7 +88,12 @@ export function abrirContrato({ reserva, cliente, imovel, config }) {
 
   <p><strong>Cláusula 6ª — Limpeza.</strong> A taxa de limpeza de ${brl(reserva.taxaLimpeza)} cobre a limpeza pós-estadia. Deixar o imóvel em condições visivelmente precárias ou com lixo excessivo poderá ensejar cobrança adicional.</p>
 
-  <p><strong>Cláusula 7ª — Foro.</strong> As partes elegem o foro da Comarca de ${esc(config.cidadeForo || 'Mogi das Cruzes/SP')} para dirimir quaisquer litígios oriundos deste instrumento.</p>
+  <p><strong>Cláusula 7ª — Cancelamento.</strong> ${esc(CANCELAMENTO)}</p>
+
+  <p><strong>Cláusula 8ª — Regras da casa.</strong> O Locatário declara conhecer e se compromete a cumprir, e a fazer cumprir por todo o grupo, as seguintes regras:</p>
+  <ul>${REGRAS_CASA.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+
+  <p><strong>Cláusula 9ª — Foro.</strong> As partes elegem o foro da Comarca de ${esc(config.cidadeForo || 'Mogi das Cruzes/SP')} para dirimir quaisquer litígios oriundos deste instrumento.</p>
 
   ${reserva.obs ? `<p><strong>Observações.</strong> ${esc(reserva.obs)}</p>` : ''}
 

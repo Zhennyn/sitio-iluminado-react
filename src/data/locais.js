@@ -54,6 +54,7 @@ export const LOCAIS = {
     ...PADRAO_LOCAL,
     nome: 'Sítio Iluminado',
     cidade: 'Biritiba Mirim / Mogi das Cruzes',
+    regiao: 'Mogi das Cruzes',
     // Fonte: referencias/materiais/tabela-de-precos.jpeg
     pacotes: {
       hospedagem: {
@@ -102,7 +103,7 @@ export const LOCAIS = {
   pedacinho: {
     ...PADRAO_LOCAL,
     nome: 'Pedacinho',
-    cidade: '',
+    cidade: 'Mogi das Cruzes',
     pacotes: tabela([10, 15, 20, 25], {
       hospedagem: [1900, 2100, 2300, 2500],
       feriado_2: [2100, 2300, 2500, 2700],
@@ -133,7 +134,7 @@ export const LOCAIS = {
   rancho: {
     ...PADRAO_LOCAL,
     nome: 'Rancho',
-    cidade: '',
+    cidade: 'Mogi das Cruzes',
     pacotes: tabela([10, 15, 20, 25], {
       hospedagem: [1900, 2200, 2500, 2700],
       feriado_2: [2200, 2400, 2600, 2800],
@@ -176,11 +177,51 @@ export const LOCAIS = {
   },
 }
 
+// Locais sem tabela nas imagens enviadas. Montanha Atibaia e Cotia usam a tabela cadastrada no site
+// antigo (hospeda-temporada.arislan10.chatgpt.site); os demais ficam com valores sob consulta.
+Object.assign(LOCAIS, {
+  'montanha-atibaia': {
+    ...PADRAO_LOCAL,
+    nome: 'Montanha Atibaia',
+    cidade: 'Atibaia',
+    capacidade: 25,
+    convidado: 40,
+    pacotes: {
+      hospedagem: { nome: 'Fim de Semana Comum (2 dias)', dias: 2, periodos: true, faixas: [[15, 2100, 2300], [22, 2300, 2500], [30, 2600, 2900]] },
+      feriado_2: { nome: 'Feriado (2 dias)', dias: 2, periodos: true, feriado: true, faixas: [[15, 2100, 2300], [22, 2300, 2500], [30, 2600, 2900]] },
+      natal_2026: { nome: 'Natal 2026', detalhe: 'Período de 23/12 a 27/12/2026.', datas: NATAL_2026, faixas: [[22, 15000], [30, 18000]] },
+      carnaval_2027: { nome: 'Carnaval 2027', detalhe: 'Período de 05/02 a 09/02/2027.', datas: CARNAVAL_2027, faixas: [[20, 12000], [30, 16000]] },
+      evento: {
+        nome: 'Diária para Eventos (sem pernoite)', detalhe: 'Horário padrão das 08h às 18h.',
+        dias: 1, intervalos: true, semConvidados: true, faixas: [[50, 2000]],
+      },
+    },
+  },
+  cotia: {
+    ...PADRAO_LOCAL,
+    nome: 'Cotia',
+    cidade: 'Cotia',
+    capacidade: 20,
+    pacotes: tabela([10], { hospedagem: [1600] }),
+  },
+  'esperanca-atibaia': { ...PADRAO_LOCAL, nome: 'Esperança Atibaia', cidade: 'Atibaia', capacidade: 30, pacotes: {} },
+  ibiuna: { ...PADRAO_LOCAL, nome: 'Ibiúna', cidade: 'Ibiúna', capacidade: 18, pacotes: {} },
+  sorocaba: { ...PADRAO_LOCAL, nome: 'Sorocaba', cidade: 'Sorocaba', capacidade: 20, pacotes: {} },
+  suzano: { ...PADRAO_LOCAL, nome: 'Suzano', cidade: 'Suzano', capacidade: 20, pacotes: {} },
+  mairipora: { ...PADRAO_LOCAL, nome: 'Mairiporã', cidade: 'Mairiporã', capacidade: 25, pacotes: {} },
+})
+
 export const LOCAL_PADRAO = 'sitio-iluminado'
+
+export const temTabela = (local) => Object.keys(local.pacotes).length > 0
 
 // Maior grupo com pernoite que o local recebe (pela tabela).
 export const capacidadeDe = (local) =>
+  local.capacidade ??
   Math.max(...Object.values(local.pacotes).filter((p) => !p.semConvidados).map((p) => p.faixas.at(-1)[0]))
+
+// Menor valor de fim de semana da tabela, para o "a partir de" dos cards.
+export const aPartirDe = (local) => local.pacotes.hospedagem?.faixas[0][1] ?? null
 
 // Feriados nacionais (e 9 de julho, estadual de SP) que mudam o pacote para "Feriado".
 export const FERIADOS = {

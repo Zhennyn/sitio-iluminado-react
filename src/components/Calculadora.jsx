@@ -4,31 +4,43 @@ import { WhatsAppIcon } from './BrandIcons'
 import CalendarioDisponibilidade from './CalendarioDisponibilidade'
 import { whatsappLink } from '../data/site'
 import {
-  LOCAIS, LOCAL_PADRAO, PERIODOS, calcularOrcamento, capacidadeDe, formatBRL, sugerirPacote,
+  LOCAIS, LOCAL_PADRAO, PERIODOS, calcularOrcamento, capacidadeDe, formatBRL, sugerirPacote, temTabela,
 } from '../data/locais'
 import { useDb } from '../admin/data/store'
 import { diasOcupados } from '../admin/data/selectors'
 import { addDias, diffDias, fmtData } from '../admin/lib/format'
 
-export default function Calculadora() {
+// `inicial` vem dos cards de imóveis ("Simular valor"); a Home remonta o componente a cada escolha.
+export default function Calculadora({ inicial = {} }) {
   const estado = useDb()
-  const [localId, setLocalId] = useState(LOCAL_PADRAO)
-  const [tipo, setTipo] = useState('hospedagem')
-  const [periodo, setPeriodo] = useState('sab_dom')
-  const [checkin, setCheckin] = useState(null)
-  const [checkout, setCheckout] = useState(null)
-  const [semPacote, setSemPacote] = useState(false)
+  const [localId, setLocalId] = useState(inicial.localId || LOCAL_PADRAO)
+  const [checkin, setCheckin] = useState(inicial.checkin || null)
+  const [checkout, setCheckout] = useState(inicial.checkout || null)
+  const [sugestaoInicial] = useState(() =>
+    inicial.checkin && inicial.checkout ? sugerirPacote(LOCAIS[localId], inicial.checkin, inicial.checkout) : null,
+  )
+  const [tipo, setTipo] = useState(sugestaoInicial?.pacote || 'hospedagem')
+  const [periodo, setPeriodo] = useState(sugestaoInicial?.periodo || 'sab_dom')
+  const [semPacote, setSemPacote] = useState(!!inicial.checkout && !sugestaoInicial)
   // Guardados como texto para o campo poder ficar vazio enquanto a pessoa digita.
   const [pessoasTxt, setPessoasTxt] = useState('15')
   const [convidadosTxt, setConvidadosTxt] = useState('0')
+  const [criancasTxt, setCriancasTxt] = useState('0')
+  const [bebesTxt, setBebesTxt] = useState('0')
 
   const local = LOCAIS[localId]
   const ocupados = useMemo(() => diasOcupados(estado, localId), [estado, localId])
-  const tipoAtual = local.pacotes[tipo] ? tipo : 'hospedagem'
-  const pacote = local.pacotes[tipoAtual]
+  const tabela = temTabela(local)
+  // Imóveis sem tabela ficam sem pacote: o valor é sob consulta.
+  const tipoAtual = local.pacotes[tipo] ? tipo : Object.keys(local.pacotes)[0]
+  const pacote = tipoAtual ? local.pacotes[tipoAtual] : null
+  const evento = !!pacote?.semConvidados
   const pessoas = Math.max(1, parseInt(pessoasTxt, 10) || 1)
-  const convidados = pacote.semConvidados ? 0 : Math.max(0, parseInt(convidadosTxt, 10) || 0)
-  const r = calcularOrcamento(localId, tipoAtual, periodo, pessoas, convidados)
+  const convidados = evento ? 0 : Math.max(0, parseInt(convidadosTxt, 10) || 0)
+  // Hospedagem: até 3 anos não conta; de 4 a 9 anos conta meia vaga na faixa do pacote.
+  const criancas = evento ? 0 : Math.max(0, parseInt(criancasTxt, 10) || 0)
+  const bebes = evento ? 0 : Math.max(0, parseInt(bebesTxt, 10) || 0)
+  const r = pacote ? calcularOrcamento(localId, tipoAtual, periodo, pessoas + criancas / 2, convidados) : null
 
   const aplicarSugestao = (l, ini, fim) => {
     const s = sugerirPacote(l, ini, fim)
@@ -59,8 +71,6 @@ export default function Calculadora() {
     if (s) {
       setTipo(s.pacote)
       setPeriodo(s.periodo)
-    } else if (!novo.pacotes[tipo]) {
-      setTipo('hospedagem')
     }
   }
 
@@ -76,13 +86,15 @@ export default function Calculadora() {
     const linhas = [
       `Olá! Gostaria de fazer uma reserva no *${local.nome}*.`,
       '',
-      `*Pacote:* ${pacote.nome}`,
     ]
+    if (pacote) linhas.push(`*Pacote:* ${pacote.nome}`)
     if (checkin && checkout) linhas.push(`*Datas:* ${fmtData(checkin)} a ${fmtData(checkout)}`)
-    if (pacote.periodos) linhas.push(`*Período:* ${PERIODOS[periodo]}`)
-    linhas.push(`*${tipoAtual === 'evento' ? 'Pessoas' : 'Hóspedes'}:* ${pessoas}`)
+    if (pacote?.periodos) linhas.push(`*Período:* ${PERIODOS[periodo]}`)
+    linhas.push(`*${evento ? 'Pessoas' : 'Adultos (10+ anos)'}:* ${pessoas}`)
+    if (criancas > 0) linhas.push(`*Crianças de 4 a 9 anos:* ${criancas}`)
+    if (bebes > 0) linhas.push(`*Crianças até 3 anos:* ${bebes}`)
     if (convidados > 0) linhas.push(`*Convidados sem pernoite:* ${convidados}`)
-    if (!r.sobConsulta) linhas.push('', `*Valor estimado:* ${formatBRL(r.total)}`)
+    if (r && !r.sobConsulta) linhas.push('', `*Valor estimado:* ${formatBRL(r.total)}`)
     linhas.push('', 'Podemos confirmar a disponibilidade?')
     return linhas.join('\n')
   }
@@ -115,22 +127,24 @@ export default function Calculadora() {
             onChange={mudarDatas}
           />
           <p className="field-hint" aria-live="polite">{datasTxt}</p>
-          {semPacote && (
+          {semPacote && tabela && (
             <p className="field-hint">Nenhum pacote da tabela cobre essa estadia. Escolha o pacote mais próximo ou consulte pelo WhatsApp.</p>
           )}
         </div>
 
-        <div className={`field${pacote.periodos ? '' : ' full'}`}>
-          <label htmlFor="calc-tipo">Pacote</label>
-          <select id="calc-tipo" value={tipoAtual} onChange={(e) => setTipo(e.target.value)}>
-            {Object.entries(local.pacotes).map(([id, p]) => (
-              <option key={id} value={id}>{p.nome}</option>
-            ))}
-          </select>
-          {pacote.detalhe && <p className="field-hint">{pacote.detalhe}</p>}
-        </div>
+        {pacote && (
+          <div className={`field${pacote.periodos ? '' : ' full'}`}>
+            <label htmlFor="calc-tipo">Pacote</label>
+            <select id="calc-tipo" value={tipoAtual} onChange={(e) => setTipo(e.target.value)}>
+              {Object.entries(local.pacotes).map(([id, p]) => (
+                <option key={id} value={id}>{p.nome}</option>
+              ))}
+            </select>
+            {pacote.detalhe && <p className="field-hint">{pacote.detalhe}</p>}
+          </div>
+        )}
 
-        {pacote.periodos && (
+        {pacote?.periodos && (
           <div className="field">
             <label htmlFor="calc-periodo">Check-in / Check-out</label>
             <select id="calc-periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
@@ -142,7 +156,7 @@ export default function Calculadora() {
         )}
 
         <div className="field">
-          <label htmlFor="calc-pessoas">{tipoAtual === 'evento' ? 'Quantidade de pessoas' : 'Hóspedes com pernoite'}</label>
+          <label htmlFor="calc-pessoas">{evento ? 'Quantidade de pessoas' : 'Adultos e crianças de 10+ anos'}</label>
           <input
             id="calc-pessoas"
             type="number"
@@ -153,9 +167,41 @@ export default function Calculadora() {
           />
         </div>
 
-        {!pacote.semConvidados && (
+        {!evento && (
+          <>
+            <div className="field">
+              <label htmlFor="calc-criancas">Crianças de 4 a 9 anos (meia vaga)</label>
+              <input
+                id="calc-criancas"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={criancasTxt}
+                onChange={(e) => setCriancasTxt(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="calc-bebes">Crianças até 3 anos (grátis)</label>
+              <input
+                id="calc-bebes"
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={bebesTxt}
+                onChange={(e) => setBebesTxt(e.target.value)}
+              />
+              {pacote?.datas && tipoAtual !== 'carnaval_2027' && (
+                <p className="field-hint">Natal e Réveillon têm regras próprias para crianças. Confirme pelo WhatsApp.</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {!evento && (
           <div className="field">
-            <label htmlFor="calc-convidados">Convidados sem pernoite (+{formatBRL(local.convidado)} cada)</label>
+            <label htmlFor="calc-convidados">
+              Convidados sem pernoite{tabela ? ` (+${formatBRL(local.convidado)} cada)` : ''}
+            </label>
             <input
               id="calc-convidados"
               type="number"
@@ -169,7 +215,11 @@ export default function Calculadora() {
       </div>
 
       <div className="result-box" aria-live="polite">
-        {r.sobConsulta ? (
+        {!r ? (
+          <p className="result-consulta">
+            Os valores do {local.nome} são sob consulta. Envie as datas e o tamanho do grupo pelo WhatsApp.
+          </p>
+        ) : r.sobConsulta ? (
           <p className="result-consulta">
             Para grupos acima de {r.maxPessoas} pessoas neste pacote, os valores são sob consulta.
           </p>
@@ -203,7 +253,7 @@ export default function Calculadora() {
         )}
         <a className="button-primary" href={whatsappLink(mensagem())} target="_blank" rel="noopener noreferrer">
           <WhatsAppIcon size={22} />
-          {r.sobConsulta ? 'Consultar valores' : 'Solicitar datas'}
+          {!r || r.sobConsulta ? 'Consultar valores' : 'Solicitar datas'}
           <ChevronRight size={20} aria-hidden="true" />
         </a>
         <p className="result-note">Valores sujeitos à disponibilidade. Consulte antes de confirmar sua reserva.</p>

@@ -1,6 +1,6 @@
 import { addDias, diaSemana, hoje } from '../lib/format'
 
-export const VERSAO = 2
+export const VERSAO = 3
 
 export const TEMPLATES_PADRAO = [
   {
@@ -75,14 +75,22 @@ export const IMOVEIS = [
     quartos: 6, banheiros: 0, capacidade: 40, diaria: 2200, usaTabela: false, proprio: false,
     comissaoPct: 20, proprietario: '', foto: '', cor: '#7c3aed', ativo: true,
   },
-  // Locais com tabela de preços própria (src/data/locais.js), adicionados na versão 2.
+  // Locais do portfólio (tabelas em src/data/locais.js). Os sem tabela ficam com valor manual.
   ...[
     ['mairinque', 'Mairinque', 'Mairinque - SP', 40, '#ea580c'],
-    ['pedacinho', 'Pedacinho', '', 25, '#0d9488'],
+    ['pedacinho', 'Pedacinho', 'Mogi das Cruzes - SP', 25, '#0d9488'],
     ['pinheiro-atibaia', 'Pinheiro Atibaia', 'Atibaia - SP', 20, '#15803d'],
-    ['rancho', 'Rancho', '', 25, '#b45309'],
+    ['rancho', 'Rancho', 'Mogi das Cruzes - SP', 25, '#b45309'],
     ['sao-roque-lourdes', 'São Roque - Lourdes', 'São Roque - SP', 25, '#2563eb'],
     ['sao-roque-rosi', 'São Roque - Rosi', 'São Roque - SP', 20, '#db2777'],
+    // Versão 3: restante do portfólio, vindo do site hospeda-temporada.arislan10.chatgpt.site.
+    ['montanha-atibaia', 'Montanha Atibaia', 'Atibaia - SP', 25, '#4d7c0f'],
+    ['esperanca-atibaia', 'Esperança Atibaia', 'Atibaia - SP', 30, '#0891b2'],
+    ['ibiuna', 'Ibiúna', 'Ibiúna - SP', 18, '#9333ea'],
+    ['cotia', 'Cotia', 'Cotia - SP', 20, '#c2410c'],
+    ['sorocaba', 'Sorocaba', 'Sorocaba - SP', 20, '#be123c'],
+    ['suzano', 'Suzano', 'Suzano - SP', 20, '#0369a1'],
+    ['mairipora', 'Mairiporã', 'Mairiporã - SP', 25, '#65a30d'],
   ].map(([id, nome, cidade, capacidade, cor]) => ({
     id, nome, cidade, quartos: 0, banheiros: 0, capacidade, diaria: 0, usaTabela: true, proprio: false,
     comissaoPct: 20, proprietario: '', foto: '', cor, ativo: true,
