@@ -4,7 +4,7 @@ import {
 } from 'lucide-react'
 import { db, uid, useDb } from '../data/store'
 import {
-  CONTRATO, METODOS_PAGAMENTO, conflitosDe, financeiroDe, noites, preencherTemplate, statusDe,
+  CONTRATO, METODOS_PAGAMENTO, conflitosDe, financeiroDe, grupoDe, noites, preencherTemplate, statusDe,
 } from '../data/selectors'
 import { abrirContrato } from '../lib/contrato'
 import { brl, fmtData, fmtHora, fmtTelefone, hoje, whatsappDe } from '../lib/format'
@@ -146,7 +146,7 @@ export default function ReservaDetalhe({ id }) {
             <dt><CalendarDays size={15} aria-hidden="true" /> Check-out</dt>
             <dd>{fmtData(r.checkout)} até {fmtHora(r.horaCheckout)} · {n ? `${n} noite${n > 1 ? 's' : ''}` : 'diária'}</dd>
             <dt><Users size={15} aria-hidden="true" /> Pessoas</dt>
-            <dd>{r.hospedes} com pernoite{r.convidados ? ` + ${r.convidados} convidados` : ''}</dd>
+            <dd>{grupoDe(r)} com pernoite{r.convidados ? ` + ${r.convidados} convidados` : ''}</dd>
           </dl>
         </div>
 

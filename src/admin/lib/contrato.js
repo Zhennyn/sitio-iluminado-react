@@ -1,4 +1,4 @@
-import { financeiroDe } from '../data/selectors'
+import { financeiroDe, grupoDe, totalPessoas } from '../data/selectors'
 import { brl, fmtData, fmtHora, MESES } from './format'
 import { CANCELAMENTO, REGRAS_CASA } from '../../data/regras'
 
@@ -59,7 +59,7 @@ export function abrirContrato({ reserva, cliente, imovel, config }) {
   <table>
     <tr><td>Check-in</td><td>${fmtData(reserva.checkin)} às ${fmtHora(reserva.horaCheckin)}</td></tr>
     <tr><td>Check-out</td><td>${fmtData(reserva.checkout)} até ${fmtHora(reserva.horaCheckout)}</td></tr>
-    <tr><td>Nº máximo de pessoas</td><td>${esc(reserva.hospedes)} pessoas${reserva.convidados ? ` + ${esc(reserva.convidados)} convidados sem pernoite` : ''}</td></tr>
+    <tr><td>Nº máximo de pessoas</td><td>${esc(totalPessoas(reserva))} pessoas (${esc(grupoDe(reserva))})${reserva.convidados ? ` + ${esc(reserva.convidados)} convidados sem pernoite` : ''}</td></tr>
   </table>
 
   <h2>Valores</h2>
@@ -80,7 +80,7 @@ export function abrirContrato({ reserva, cliente, imovel, config }) {
 
   <p><strong>Cláusula 2ª — Valor e pagamento.</strong> O valor total acordado é de <strong>${brl(f.total)}</strong>, sendo ${config.percentSinal}% (${brl(f.sinal)}) pagos como sinal para garantia da data, e o saldo pago até ${config.prazoSaldoDias} dias antes do check-in. O não pagamento no prazo implicará o cancelamento da reserva, sem devolução do sinal.</p>
 
-  <p><strong>Cláusula 3ª — Capacidade.</strong> O imóvel será ocupado por no máximo ${esc(reserva.hospedes)} pessoas${reserva.convidados ? `, além de ${esc(reserva.convidados)} convidados sem pernoite` : ''}. O excesso de ocupantes sem anuência prévia do Locador autoriza a rescisão imediata do contrato, sem devolução de valores.</p>
+  <p><strong>Cláusula 3ª — Capacidade.</strong> O imóvel será ocupado por no máximo ${esc(totalPessoas(reserva))} pessoas (${esc(grupoDe(reserva))})${reserva.convidados ? `, além de ${esc(reserva.convidados)} convidados sem pernoite` : ''}. O excesso de ocupantes sem anuência prévia do Locador autoriza a rescisão imediata do contrato, sem devolução de valores.</p>
 
   <p><strong>Cláusula 4ª — Silêncio.</strong> É proibido som automotivo ou amplificado em volume que perturbe a vizinhança após as 00h00 (meia-noite). O descumprimento sujeitará o Locatário às penalidades legais cabíveis.</p>
 

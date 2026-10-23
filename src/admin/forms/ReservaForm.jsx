@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Calculator, AlertTriangle } from 'lucide-react'
 import { db, useDb } from '../data/store'
 import { conflitosDe, indexar, totalDe } from '../data/selectors'
-import { LOCAIS, PERIODOS, calcularOrcamento, temTabela } from '../../data/locais'
+import { LOCAIS, PERIODOS, calcularOrcamento, sugerirPacote, temTabela } from '../../data/locais'
 import { addDias, brl, diffDias, fmtData, hoje } from '../lib/format'
 import { useAdminUI } from '../ui/context'
 import { Campo, Modal } from '../ui/components'
@@ -32,20 +32,39 @@ export default function ReservaForm({ reserva, inicial = {} }) {
       checkout: r.checkout || inicial.checkout || addDias(checkin, 1),
       horaCheckout: r.horaCheckout || config.horaCheckout,
       hospedes: String(r.hospedes ?? inicial.hospedes ?? ''),
+      criancas: String(r.criancas ?? 0),
+      bebes: String(r.bebes ?? 0),
       convidados: String(r.convidados ?? 0),
       valor: r.valor != null ? String(r.valor) : '',
       taxaLimpeza: String(r.taxaLimpeza ?? config.taxaLimpeza),
       extras: String(r.extras ?? 0),
       status: r.status || 'pre',
       obs: r.obs || '',
+      pacoteSugerido: false,
     }
   })
   const [erros, setErros] = useState({})
   const set = (campo) => (e) => setF((x) => ({ ...x, [campo]: e.target.value }))
 
-  const imovel = indexar(estado.imoveis)[f.imovelId]
-  // Tabela de preços do site para este imóvel, se ele tiver uma.
-  const tabela = imovel?.usaTabela && LOCAIS[imovel.id] && temTabela(LOCAIS[imovel.id]) ? LOCAIS[imovel.id] : null
+  const imoveis = indexar(estado.imoveis)
+  const imovel = imoveis[f.imovelId]
+  // Tabela de preços do site para o imóvel, se ele tiver uma.
+  const tabelaDe = (id) => {
+    const local = imoveis[id]?.usaTabela ? LOCAIS[id] : null
+    return local && temTabela(local) ? local : null
+  }
+  const tabela = tabelaDe(f.imovelId)
+  const semTabela = !!imovel?.usaTabela && !!LOCAIS[f.imovelId] && !tabela
+
+  // Ao mudar imóvel ou datas, escolhe o pacote que combina com o período, como a calculadora do site.
+  const setSugerindo = (campo) => (e) =>
+    setF((x) => {
+      const prox = { ...x, [campo]: e.target.value }
+      const t = tabelaDe(prox.imovelId)
+      const s = t && prox.checkin && prox.checkout >= prox.checkin ? sugerirPacote(t, prox.checkin, prox.checkout) : null
+      return s ? { ...prox, pacote: s.pacote, periodo: s.periodo, pacoteSugerido: true } : { ...prox, pacoteSugerido: false }
+    })
+  const setPacote = (campo) => (e) => setF((x) => ({ ...x, [campo]: e.target.value, pacoteSugerido: false }))
   const pacoteId = tabela && !tabela.pacotes[f.pacote] ? 'hospedagem' : f.pacote
   const n = (v) => Number(String(v).replace(',', '.')) || 0
   const total = totalDe({ valor: n(f.valor), taxaLimpeza: n(f.taxaLimpeza), extras: n(f.extras) })
@@ -56,7 +75,9 @@ export default function ReservaForm({ reserva, inicial = {} }) {
   const sugerir = () => {
     if (!imovel) return
     if (tabela) {
-      const r = calcularOrcamento(imovel.id, pacoteId, f.periodo, Math.max(1, n(f.hospedes)), n(f.convidados))
+      // Crianças de 4 a 9 anos contam meia vaga na faixa; até 3 anos não contam.
+      const vagas = Math.max(1, n(f.hospedes)) + n(f.criancas) / 2
+      const r = calcularOrcamento(imovel.id, pacoteId, f.periodo, vagas, n(f.convidados))
       if (r.sobConsulta) {
         aviso(`Acima de ${r.maxPessoas} pessoas este pacote é sob consulta. Informe o valor manualmente.`, 'erro')
         return
@@ -64,6 +85,8 @@ export default function ReservaForm({ reserva, inicial = {} }) {
       setF((x) => ({ ...x, pacote: pacoteId, valor: String(r.valBase + r.valSexta), extras: String(r.valConvidados), taxaLimpeza: String(r.limpeza) }))
     } else if (imovel.diaria) {
       setF((x) => ({ ...x, valor: String(imovel.diaria * Math.max(1, noites)), taxaLimpeza: String(config.taxaLimpeza) }))
+    } else if (semTabela) {
+      aviso('Este imóvel ainda não tem tabela de preços (valor sob consulta). Informe o valor manualmente.', 'erro')
     } else {
       aviso('Cadastre a diária do imóvel para calcular automaticamente.', 'erro')
     }
@@ -101,6 +124,8 @@ export default function ReservaForm({ reserva, inicial = {} }) {
       checkout: f.checkout,
       horaCheckout: f.horaCheckout,
       hospedes: n(f.hospedes),
+      criancas: n(f.criancas),
+      bebes: n(f.bebes),
       convidados: n(f.convidados),
       valor: n(f.valor),
       taxaLimpeza: n(f.taxaLimpeza),
@@ -135,7 +160,7 @@ export default function ReservaForm({ reserva, inicial = {} }) {
     >
       <form id="form-reserva" className="form-grade" onSubmit={salvar} noValidate>
         <Campo label="Imóvel" erro={erros.imovelId}>
-          <select value={f.imovelId} onChange={set('imovelId')}>
+          <select value={f.imovelId} onChange={setSugerindo('imovelId')}>
             {imoveisAtivos.map((i) => <option key={i.id} value={i.id}>{i.nome}</option>)}
           </select>
         </Campo>
@@ -165,13 +190,13 @@ export default function ReservaForm({ reserva, inicial = {} }) {
 
         <Campo label="Check-in" erro={erros.checkin}>
           <div className="campo-dupla">
-            <input type="date" value={f.checkin} onChange={set('checkin')} />
+            <input type="date" value={f.checkin} onChange={setSugerindo('checkin')} />
             <input type="time" value={f.horaCheckin} onChange={set('horaCheckin')} aria-label="Horário do check-in" />
           </div>
         </Campo>
         <Campo label="Check-out" erro={erros.checkout} dica={noites >= 0 && f.checkout >= f.checkin ? (noites ? `${noites} noite${noites > 1 ? 's' : ''}` : 'Diária (sem pernoite)') : null}>
           <div className="campo-dupla">
-            <input type="date" value={f.checkout} min={f.checkin} onChange={set('checkout')} />
+            <input type="date" value={f.checkout} min={f.checkin} onChange={setSugerindo('checkout')} />
             <input type="time" value={f.horaCheckout} onChange={set('horaCheckout')} aria-label="Horário do check-out" />
           </div>
         </Campo>
@@ -194,8 +219,14 @@ export default function ReservaForm({ reserva, inicial = {} }) {
           </div>
         )}
 
-        <Campo label="Pessoas com pernoite" erro={erros.hospedes} dica={imovel ? `Capacidade: ${imovel.capacidade} pessoas` : null}>
+        <Campo label="Adultos e crianças de 10+ anos" erro={erros.hospedes} dica={imovel ? `Capacidade: ${imovel.capacidade} pessoas` : null}>
           <input type="number" min="1" inputMode="numeric" value={f.hospedes} onChange={set('hospedes')} />
+        </Campo>
+        <Campo label="Crianças de 4 a 9 anos" dica="Contam meia vaga na faixa do pacote">
+          <input type="number" min="0" inputMode="numeric" value={f.criancas} onChange={set('criancas')} />
+        </Campo>
+        <Campo label="Crianças até 3 anos" dica="Não pagam">
+          <input type="number" min="0" inputMode="numeric" value={f.bebes} onChange={set('bebes')} />
         </Campo>
         <Campo label="Convidados sem pernoite">
           <input type="number" min="0" inputMode="numeric" value={f.convidados} onChange={set('convidados')} />
@@ -203,16 +234,26 @@ export default function ReservaForm({ reserva, inicial = {} }) {
 
         <fieldset className="campo-largo valores">
           <legend>Valores</legend>
+          {semTabela && (
+            <p className="campo-dica">Este imóvel ainda não tem tabela de preços: o valor é sob consulta. Informe-o manualmente.</p>
+          )}
           {tabela && (
             <div className="form-grade">
-              <Campo label="Pacote da tabela">
-                <select value={pacoteId} onChange={set('pacote')}>
+              <Campo
+                label="Pacote da tabela"
+                dica={
+                  tabela.pacotes[pacoteId]?.datas && pacoteId !== 'carnaval_2027'
+                    ? 'Natal e Réveillon têm regras próprias para crianças.'
+                    : f.pacoteSugerido ? 'Escolhido pelas datas (pode trocar).' : null
+                }
+              >
+                <select value={pacoteId} onChange={setPacote('pacote')}>
                   {Object.entries(tabela.pacotes).map(([id, p]) => <option key={id} value={id}>{p.nome}</option>)}
                 </select>
               </Campo>
               {tabela.pacotes[pacoteId]?.periodos ? (
                 <Campo label="Período">
-                  <select value={f.periodo} onChange={set('periodo')}>
+                  <select value={f.periodo} onChange={setPacote('periodo')}>
                     {Object.entries(PERIODOS).map(([id, t]) => <option key={id} value={id}>{t}</option>)}
                   </select>
                 </Campo>

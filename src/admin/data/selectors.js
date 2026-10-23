@@ -59,6 +59,16 @@ export function conflitosDe(estado, { imovelId, checkin, checkout, ignorarId }) 
   return [...reservas.map((r) => ({ tipo: 'reserva', item: r })), ...bloqueios.map((b) => ({ tipo: 'bloqueio', item: b }))]
 }
 
+// Pessoas com pernoite: adultos (10+ anos), crianças de 4 a 9 anos e crianças até 3 anos.
+export const totalPessoas = (r) => (Number(r.hospedes) || 0) + (Number(r.criancas) || 0) + (Number(r.bebes) || 0)
+
+export function grupoDe(r) {
+  const partes = [`${r.hospedes} ${Number(r.hospedes) === 1 ? 'adulto' : 'adultos'}`]
+  if (Number(r.criancas)) partes.push(`${r.criancas} de 4 a 9 anos`)
+  if (Number(r.bebes)) partes.push(`${r.bebes} até 3 anos`)
+  return partes.join(' + ')
+}
+
 export const indexar = (lista) => Object.fromEntries(lista.map((i) => [i.id, i]))
 
 // Comissão da administradora sobre uma reserva. Em imóvel próprio, todo o valor fica com ela.
@@ -100,7 +110,7 @@ export function resumoMes(estado, ym) {
     ym,
     reservas: doMes.length,
     canceladas: canceladas.length,
-    hospedes: doMes.reduce((s, r) => s + (Number(r.hospedes) || 0), 0),
+    hospedes: doMes.reduce((s, r) => s + totalPessoas(r), 0),
     faturamento,
     comissao,
     repasse: faturamento - comissao,
@@ -164,7 +174,7 @@ export function preencherTemplate(texto, { reserva, cliente, imovel, config }) {
     checkout: data(reserva.checkout),
     horaCheckin: hora(reserva.horaCheckin),
     horaCheckout: hora(reserva.horaCheckout),
-    hospedes: reserva.hospedes,
+    hospedes: totalPessoas(reserva),
     valorTotal: br(f.total),
     sinal: br(f.sinal),
     saldo: br(f.saldo),

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ClipboardList, Download, Plus } from 'lucide-react'
 import { useDb } from '../data/store'
-import { CONTRATO, STATUS, financeiroDe, indexar, statusDe } from '../data/selectors'
+import { CONTRATO, STATUS, financeiroDe, indexar, statusDe, totalPessoas } from '../data/selectors'
 import { baixarCSV } from '../lib/arquivos'
 import { brl, fmtData, hoje, normalizar } from '../lib/format'
 import { useAdminUI } from '../ui/context'
@@ -53,7 +53,7 @@ export default function Reservas() {
       lista.map((r) => {
         const f = financeiroDe(r, estado.config)
         const c = clientes[r.clienteId]
-        return [r.codigo, c?.nome, c?.telefone, imoveis[r.imovelId]?.nome, r.titulo, fmtData(r.checkin), fmtData(r.checkout), r.hospedes, f.total, f.pago, f.saldo, STATUS[statusDe(r, dia)].label, CONTRATO[r.contrato]?.label]
+        return [r.codigo, c?.nome, c?.telefone, imoveis[r.imovelId]?.nome, r.titulo, fmtData(r.checkin), fmtData(r.checkout), totalPessoas(r), f.total, f.pago, f.saldo, STATUS[statusDe(r, dia)].label, CONTRATO[r.contrato]?.label]
       }),
     )
   }
@@ -110,7 +110,7 @@ export default function Reservas() {
                       <td>{imoveis[r.imovelId]?.nome}</td>
                       <td>{fmtData(r.checkin)}</td>
                       <td>{fmtData(r.checkout)}</td>
-                      <td className="num">{r.hospedes}</td>
+                      <td className="num">{totalPessoas(r)}</td>
                       <td className="num">{brl(f.total)}</td>
                       <td className="celula-pg">
                         <Progresso pct={f.pctPago} cor={f.quitado ? 'green' : f.sinalPago ? 'blue' : 'orange'} />
