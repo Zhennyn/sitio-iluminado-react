@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth'
 import { LogIn, LogOut } from 'lucide-react'
 import { auth, sair } from '../lib/auth'
-import { conectar, desconectar, ehAdmin, useCarregado } from '../data/store'
+import { conectar, desconectar, ehAdmin, useCarregado, useErroLeitura } from '../data/store'
 import { Campo } from './components'
 
 const MENSAGENS = {
@@ -19,6 +19,7 @@ export default function Acesso({ children }) {
   const [usuario, setUsuario] = useState(undefined)
   const [autorizado, setAutorizado] = useState(null)
   const carregado = useCarregado()
+  const erroLeitura = useErroLeitura()
 
   useEffect(
     () =>
@@ -35,6 +36,23 @@ export default function Acesso({ children }) {
       }),
     [],
   )
+
+  if (autorizado && erroLeitura) {
+    return (
+      <div className="acesso">
+        <div className="acesso-card">
+          <h1>Não foi possível carregar os dados</h1>
+          <p>
+            {erroLeitura === 'permission-denied'
+              ? 'O banco de dados recusou a leitura. Confira se as regras do Firestore (firestore.rules) estão publicadas na versão atual.'
+              : 'Verifique a conexão com a internet e tente de novo.'}
+          </p>
+          <button type="button" className="btn btn-primario" onClick={() => window.location.reload()}>Tentar de novo</button>
+          <button type="button" className="acesso-link" onClick={sair}>Sair</button>
+        </div>
+      </div>
+    )
+  }
 
   if (usuario === undefined || (usuario && autorizado === null) || (autorizado && !carregado)) {
     return <div className="acesso"><p className="acesso-carregando">Carregando painel…</p></div>

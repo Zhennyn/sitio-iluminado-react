@@ -29,6 +29,8 @@ function normalizar(dados) {
 
 let estado = criarSeed({ vazio: true })
 let carregado = false
+// Erro ao ler do Firestore (ex.: regras bloqueando). A tela de acesso mostra em vez de ficar carregando.
+let erroLeitura = null
 let erroAoSalvar = false
 const ouvintes = new Set()
 
@@ -108,6 +110,12 @@ function substituirTudo(novo) {
 
 let cancelar = []
 
+function falhaLeitura(err) {
+  console.error('Falha ao ler do Firestore', err)
+  erroLeitura = err.code || 'erro'
+  avisar()
+}
+
 export function conectar() {
   if (cancelar.length) return
   const pendentes = new Set([...COLECOES, 'config'])
@@ -123,14 +131,14 @@ export function conectar() {
       estado = { ...estado, [col]: snap.docs.map((d) => ({ ...d.data(), id: d.id })) }
       recebeu(col)
       avisar()
-    }, (err) => console.error(`Falha ao ler ${col}`, err)),
+    }, falhaLeitura),
   )
   cancelar.push(
     onSnapshot(doc(firestore, ...CONFIG_DOC), (snap) => {
       estado = { ...estado, configExiste: snap.exists(), config: normalizar({ config: snap.data() || {} }).config }
       recebeu('config')
       avisar()
-    }, (err) => console.error('Falha ao ler config', err)),
+    }, falhaLeitura),
   )
 }
 
@@ -138,6 +146,7 @@ export function desconectar() {
   cancelar.forEach((fn) => fn())
   cancelar = []
   carregado = false
+  erroLeitura = null
   estado = criarSeed({ vazio: true })
   avisar()
 }
@@ -200,6 +209,7 @@ const aplicar = (item, patch) => ({ ...item, ...(typeof patch === 'function' ? p
 export const db = {
   get: () => estado,
   carregado: () => carregado,
+  erroLeitura: () => erroLeitura,
   falhouAoSalvar: () => erroAoSalvar,
 
   inserir(colecao, dados) {
@@ -291,6 +301,10 @@ const assinar = (fn) => {
 
 export function useDb() {
   return useSyncExternalStore(assinar, db.get)
+}
+
+export function useErroLeitura() {
+  return useSyncExternalStore(assinar, db.erroLeitura)
 }
 
 export function useCarregado() {
