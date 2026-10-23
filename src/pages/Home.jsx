@@ -102,6 +102,20 @@ const IDEAL_PARA = [
 export default function Home() {
   const containerRef = useRef(null)
   const navigate = useNavigate()
+  const cliquesLogo = useRef({ n: 0, timer: null })
+  const cliqueLogo = (e) => {
+    const c = cliquesLogo.current
+    clearTimeout(c.timer)
+    c.n += 1
+    if (c.n >= 4) {
+      e.preventDefault()
+      c.n = 0
+      navigate('/admin')
+      return
+    }
+    // Os cliques precisam ser seguidos: depois de 1,5 s sem clicar, a contagem recomeça.
+    c.timer = setTimeout(() => { c.n = 0 }, 1500)
+  }
   // Escolha feita nos cards de imóveis; `n` remonta a calculadora com o local e as datas.
   const [simulacao, setSimulacao] = useState({ n: 0 })
   const [scrolled, setScrolled] = useState(false)
@@ -268,9 +282,9 @@ export default function Home() {
       <div className="grain" aria-hidden="true"></div>
 
       <header className={`nav${scrolled ? ' is-scrolled' : ''}`} id="nav">
-        <a href="#topo" className="logo" aria-label="Sítio Iluminado — início">
-          {/* Atalho discreto para o painel: duplo clique no solzinho. */}
-          <span className="logo-dot" aria-hidden="true" onDoubleClick={() => navigate('/admin')}></span>
+        {/* Atalho discreto para o painel: 4 cliques seguidos no logo. */}
+        <a href="#topo" className="logo" aria-label="Sítio Iluminado — início" onClick={cliqueLogo}>
+          <span className="logo-dot" aria-hidden="true"></span>
           SÍTIO ILUMINADO
         </a>
         <nav aria-label="Seções">

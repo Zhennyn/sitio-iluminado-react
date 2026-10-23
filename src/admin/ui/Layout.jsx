@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell, BarChart3, Building2, CalendarDays, CalendarPlus, ClipboardList, ExternalLink, FileText, Handshake,
-  LayoutDashboard, Menu, MessageSquare, Search, Settings, UserPlus, Users, Wallet, X,
+  LayoutDashboard, LogOut, Menu, MessageSquare, Search, Settings, UserPlus, Users, Wallet, X,
 } from 'lucide-react'
 import { db, useDb } from '../data/store'
 import { indexar, tarefasDe } from '../data/selectors'
@@ -10,6 +10,7 @@ import { fmtData, normalizar } from '../lib/format'
 import { useAdminUI } from './context'
 import { Avatar } from './components'
 import ModalHost from './ModalHost'
+import { sair } from '../lib/auth'
 
 const MENU = [
   { to: '/admin', end: true, icone: LayoutDashboard, label: 'Painel' },
@@ -92,11 +93,12 @@ export default function Layout() {
                 <small>Administrador</small>
               </span>
             </div>
+            <button type="button" className="btn-icone" onClick={sair} aria-label="Sair do painel" title="Sair"><LogOut size={19} /></button>
           </div>
         </header>
 
         {db.falhouAoSalvar() && (
-          <div className="alerta alerta-erro faixa">Não foi possível salvar no navegador (armazenamento cheio ou bloqueado). Exporte um backup em Configurações.</div>
+          <div className="alerta alerta-erro faixa">Algumas alterações ainda não chegaram ao banco de dados (sem internet?). Elas serão enviadas assim que a conexão voltar.</div>
         )}
 
         <main className="adm-conteudo">

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { DatabaseBackup, Download, Eraser, RotateCcw, Save, Trash2, Upload } from 'lucide-react'
+import { DatabaseBackup, Download, Eraser, Save, Trash2, Upload } from 'lucide-react'
 import { db, useDb } from '../data/store'
 import { baixar } from '../lib/arquivos'
 import { hoje } from '../lib/format'
@@ -59,11 +59,6 @@ function ConfiguracoesForm() {
     db.removerExemplos()
     aviso('Dados de exemplo removidos.')
   }
-  const restaurarExemplos = () => {
-    if (!window.confirm('Isso APAGA tudo e volta aos dados de exemplo. Continuar?')) return
-    db.restaurarExemplos()
-    aviso('Dados de exemplo restaurados.')
-  }
   const apagarTudo = () => {
     if (window.prompt('Para apagar todas as reservas, clientes e lançamentos, digite APAGAR:') !== 'APAGAR') return
     db.apagarTudo()
@@ -108,8 +103,8 @@ function ConfiguracoesForm() {
         <div className="alerta alerta-info">
           <DatabaseBackup size={18} aria-hidden="true" />
           <div>
-            Por enquanto os dados ficam <strong>somente neste navegador</strong>. Se limpar os dados do navegador ou trocar de
-            computador, eles não vão junto. Faça backups com frequência — o mesmo arquivo poderá ser importado no banco de dados depois.
+            Os dados ficam salvos no <strong>banco de dados online (Firebase)</strong> e aparecem em qualquer computador ou celular
+            em que você entrar com a conta autorizada. Mesmo assim, baixe um backup de vez em quando.
           </div>
         </div>
         <div className="botoes botoes-config">
@@ -117,7 +112,6 @@ function ConfiguracoesForm() {
           <button type="button" className="btn" onClick={() => arquivo.current?.click()}><Upload size={16} aria-hidden="true" /> Importar backup</button>
           <input ref={arquivo} type="file" accept="application/json,.json" hidden onChange={importar} />
           {temExemplos && <button type="button" className="btn" onClick={removerExemplos}><Eraser size={16} aria-hidden="true" /> Remover dados de exemplo</button>}
-          <button type="button" className="btn" onClick={restaurarExemplos}><RotateCcw size={16} aria-hidden="true" /> Restaurar exemplos</button>
           <button type="button" className="btn btn-perigo" onClick={apagarTudo}><Trash2 size={16} aria-hidden="true" /> Apagar tudo</button>
         </div>
       </Painel>

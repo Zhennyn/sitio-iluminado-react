@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { WhatsAppIcon } from './BrandIcons'
 import CalendarioDisponibilidade from './CalendarioDisponibilidade'
@@ -6,13 +6,12 @@ import { whatsappLink } from '../data/site'
 import {
   LOCAIS, LOCAL_PADRAO, PERIODOS, calcularOrcamento, capacidadeDe, formatBRL, sugerirPacote, temTabela,
 } from '../data/locais'
-import { useDb } from '../admin/data/store'
-import { diasOcupados } from '../admin/data/selectors'
+import { diasDe, useOcupacao } from '../lib/ocupacao'
 import { addDias, diffDias, fmtData } from '../admin/lib/format'
 
 // `inicial` vem dos cards de imóveis ("Simular valor"); a Home remonta o componente a cada escolha.
 export default function Calculadora({ inicial = {} }) {
-  const estado = useDb()
+  const ocupacao = useOcupacao()
   const [localId, setLocalId] = useState(inicial.localId || LOCAL_PADRAO)
   const [checkin, setCheckin] = useState(inicial.checkin || null)
   const [checkout, setCheckout] = useState(inicial.checkout || null)
@@ -29,7 +28,7 @@ export default function Calculadora({ inicial = {} }) {
   const [bebesTxt, setBebesTxt] = useState('0')
 
   const local = LOCAIS[localId]
-  const ocupados = useMemo(() => diasOcupados(estado, localId), [estado, localId])
+  const ocupados = diasDe(ocupacao, localId)
   const tabela = temTabela(local)
   // Imóveis sem tabela ficam sem pacote: o valor é sob consulta.
   const tipoAtual = local.pacotes[tipo] ? tipo : Object.keys(local.pacotes)[0]
@@ -60,7 +59,7 @@ export default function Calculadora({ inicial = {} }) {
 
   const mudarLocal = (id) => {
     const novo = LOCAIS[id]
-    const ocupadosNovo = diasOcupados(estado, id)
+    const ocupadosNovo = diasDe(ocupacao, id)
     let conflito = false
     for (let d = checkin; d && d <= (checkout || checkin); d = addDias(d, 1)) if (ocupadosNovo.has(d)) conflito = true
 

@@ -1,6 +1,6 @@
 /* ================= Painel administrativo ================= */
 
-.adm, .toasts, .carregando-admin {
+.adm, .toasts, .carregando-admin, .acesso {
   --a-bg: #f3f5f9;
   --a-card: #ffffff;
   --a-borda: #e5e8ef;
@@ -151,13 +151,13 @@
 .abas button.ativo span { background: #dbeafe; color: var(--a-azul); }
 
 /* ---------- Formulários ---------- */
-.adm input:not([type=checkbox]):not([type=color]):not([type=search]), .adm select, .adm textarea,
+.adm input:not([type=checkbox]):not([type=color]):not([type=search]), .adm select, .adm textarea, .acesso input,
 .filtros input[type=search] {
   width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--a-borda-forte); border-radius: 10px; background: #fff;
   font: inherit; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
 }
 .adm textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
-.adm input:focus, .adm select:focus, .adm textarea:focus { border-color: var(--a-azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+.adm input:focus, .adm select:focus, .adm textarea:focus, .acesso input:focus { border-color: var(--a-azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
 .adm input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid var(--a-borda-forte); border-radius: 10px; background: #fff; }
 .adm .select-sm { height: 32px; width: auto; padding: 0 28px 0 10px; font-size: 13px; border-radius: 8px; }
 .form-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
@@ -468,3 +468,23 @@ a.kpi:hover, button.kpi:hover { transform: translateY(-2px); box-shadow: 0 10px 
   .alertas-lista { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; }
   .toasts { left: 16px; right: 16px; bottom: 16px; }
 }
+
+/* ================= Tela de acesso ================= */
+.acesso {
+  position: fixed; inset: 0; overflow-y: auto; display: grid; place-items: center; padding: 24px 16px;
+  background: #0f1b33; font-family: "Manrope", system-ui, sans-serif; color: #0f172a;
+}
+.acesso-carregando { color: #cbd5e1; }
+.acesso-card {
+  width: min(400px, 100%); padding: 36px 32px; border-radius: 18px; background: #fff; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.45);
+}
+.acesso-card h1 { font-size: 1.35rem; }
+.acesso-card p { color: #475569; font-size: 14px; line-height: 1.5; }
+.acesso-marca { font-size: 2.2rem; color: #eab308; line-height: 1; }
+.acesso-campos { width: 100%; display: flex; flex-direction: column; gap: 12px; text-align: left; margin-top: 4px; }
+.acesso-entrar { width: 100%; height: 42px; }
+.acesso-link { background: none; border: 0; color: #2563eb; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.acesso-link:hover { text-decoration: underline; }
+.acesso-ok { color: #15803d !important; }
+.acesso-erro { color: #dc2626 !important; }

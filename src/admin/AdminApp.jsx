@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminUIProvider from './ui/AdminUIProvider'
+import Acesso from './ui/Acesso'
 import Layout from './ui/Layout'
 import Painel from './pages/Painel'
 import Calendario from './pages/Calendario'
@@ -16,6 +17,7 @@ import './admin.css'
 
 export default function AdminApp() {
   return (
+    <Acesso>
     <AdminUIProvider>
       <Routes>
         <Route element={<Layout />}>
@@ -34,5 +36,6 @@ export default function AdminApp() {
         </Route>
       </Routes>
     </AdminUIProvider>
+    </Acesso>
   )
 }

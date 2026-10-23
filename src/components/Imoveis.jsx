@@ -4,8 +4,7 @@ import { WhatsAppIcon } from './BrandIcons'
 import CATALOGO from '../data/catalogo.json'
 import { LOCAIS, aPartirDe, capacidadeDe, formatBRL } from '../data/locais'
 import { PROPRIETARIO, foto, whatsappLink } from '../data/site'
-import { useDb } from '../admin/data/store'
-import { diasOcupados } from '../admin/data/selectors'
+import { diasDe, useOcupacao } from '../lib/ocupacao'
 import { addDias, fmtData, fmtDataCurta, hoje } from '../admin/lib/format'
 
 // Fotos hospedadas nos anúncios do Temporada Livre, que oferece as variantes thumb_, mobile_ e desktop_.
@@ -29,7 +28,7 @@ const livreEntre = (ocupados, ini, fim) => {
 }
 
 export default function Imoveis({ onSimular }) {
-  const estado = useDb()
+  const ocupacao = useOcupacao()
   const [cidade, setCidade] = useState('')
   const [ini, setIni] = useState('')
   const [fim, setFim] = useState('')
@@ -38,8 +37,8 @@ export default function Imoveis({ onSimular }) {
 
   const livres = useMemo(() => {
     if (!busca) return null
-    return new Set(IMOVEIS.filter((i) => livreEntre(diasOcupados(estado, i.id), busca.ini, busca.fim)).map((i) => i.id))
-  }, [estado, busca])
+    return new Set(IMOVEIS.filter((i) => livreEntre(diasDe(ocupacao, i.id), busca.ini, busca.fim)).map((i) => i.id))
+  }, [ocupacao, busca])
 
   const visiveis = IMOVEIS.filter((i) => (!cidade || regiaoDe(i.local) === cidade) && (!livres || livres.has(i.id)))
 
