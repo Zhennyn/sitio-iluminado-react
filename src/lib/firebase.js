@@ -1,5 +1,13 @@
 // Conexão com o Firebase do projeto "sitio-iluminado".
-// Esta configuração é pública por natureza: quem protege os dados são as regras em firestore.rules.
+//
+// Esta configuração NÃO é segredo e não é um vazamento: a apiKey do Firebase Web só identifica o
+// projeto e vai de qualquer forma para o navegador de quem abre o site (esconder em .env não muda
+// isso). O alerta de "secret scanning" do GitHub para ela é falso positivo.
+// Quem protege os dados:
+//   - as regras em firestore.rules (só a coleção `ocupacao` é pública; o resto exige um usuário
+//     logado que esteja na coleção `admins`);
+//   - cadastro de usuários desativado no console (Authentication → Configurações);
+//   - a chave restrita aos domínios do site no Google Cloud Console (APIs e serviços → Credenciais).
 
 import { initializeApp } from 'firebase/app'
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
